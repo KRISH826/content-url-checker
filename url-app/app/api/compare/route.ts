@@ -1,7 +1,9 @@
-import { compareText } from "@/lib/diff";
+import { compareLines } from "@/lib/diff";
 import { extractContent } from "@/lib/extractor";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod';
+
+export const maxDuration = 60;
 
 const compareSchema = z.object({
     id: z.number().optional(),
@@ -23,12 +25,11 @@ export async function POST(req: NextRequest) {
 
         const { oldUrl, newUrl, id } = validation.data;
 
-        const [oldData, newData] = await Promise.all([
-            extractContent(oldUrl),
-            extractContent(newUrl),
-        ]);
+        // One after the other: two Chromium instances at once use a lot of memory.
+        const oldData = await extractContent(oldUrl);
+        const newData = await extractContent(newUrl);
 
-        const diff = compareText(oldData.text, newData.text);
+        const diff = compareLines(oldData.lines, newData.lines);
 
         return NextResponse.json({
             success: true,
@@ -38,6 +39,8 @@ export async function POST(req: NextRequest) {
                 newUrl,
                 oldTitle: oldData.title,
                 newTitle: newData.title,
+                oldMode: oldData.mode,
+                newMode: newData.mode,
                 diff,
             },
         });
