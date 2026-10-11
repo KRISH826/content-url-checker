@@ -8,11 +8,8 @@ import {
     AlertTriangle,
     Columns,
     AlignLeft,
-    PlusCircle,
-    MinusCircle,
     Copy,
     Check,
-    Sparkles,
     GitCompare,
 } from "lucide-react";
 
@@ -63,42 +60,12 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const scoreBar = diff.score >= 90 ? "bg-emerald-500" : diff.score >= 60 ? "bg-amber-500" : "bg-rose-500";
+    const verdictStyle = diff.score >= 90 ? "bg-emerald-500/10 text-emerald-700" : diff.score >= 60 ? "bg-amber-500/10 text-amber-700" : "bg-rose-500/10 text-rose-700";
+    const totalChanged = diff.addWords + diff.removeWords || 1;
     const stats = [
-        {
-            label: "Similarity Score",
-            value: `${diff.score}%`,
-            unit: "match",
-            badge: diff.verdict || "Score",
-            badgeStyle: diff.score >= 90 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : diff.score >= 60 ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-rose-500/10 text-rose-600 border-rose-500/20",
-            barColor: diff.score >= 90 ? "bg-emerald-500" : diff.score >= 60 ? "bg-amber-500" : "bg-rose-500",
-            barWidth: `${diff.score}%`,
-            icon: Sparkles,
-            iconClass: "text-primary",
-        },
-        {
-            label: "Added Words",
-            value: `+${diff.addWords.toLocaleString()}`,
-            unit: "words",
-            valueClass: "text-emerald-600 dark:text-emerald-400",
-            badge: "+ Added",
-            badgeStyle: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-            barColor: "bg-emerald-500",
-            barWidth: "100%",
-            icon: PlusCircle,
-            iconClass: "text-emerald-600",
-        },
-        {
-            label: "Removed Words",
-            value: `-${diff.removeWords.toLocaleString()}`,
-            unit: "words",
-            valueClass: "text-rose-600 dark:text-rose-400",
-            badge: "- Removed",
-            badgeStyle: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-            barColor: "bg-rose-500",
-            barWidth: "100%",
-            icon: MinusCircle,
-            iconClass: "text-rose-600",
-        },
+        { label: "Added words", value: `+${diff.addWords.toLocaleString()}`, color: "text-emerald-600", bar: "bg-emerald-500", share: diff.addWords / totalChanged },
+        { label: "Removed words", value: `−${diff.removeWords.toLocaleString()}`, color: "text-rose-600", bar: "bg-rose-500", share: diff.removeWords / totalChanged },
     ];
 
     const renderText = (parts: DiffPart[]) => (
@@ -119,29 +86,26 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
 
     return (
         <div className="space-y-6">
-            {/* 3 Metric Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {stats.map((s, idx) => (
-                    <Card key={idx} className="border-border/60 bg-card/90 shadow-xs relative overflow-hidden flex flex-col justify-between">
-                        <CardContent className="p-5 space-y-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="size-8 rounded-lg bg-muted flex items-center justify-center">
-                                        <s.icon className={`size-4 ${s.iconClass}`} />
-                                    </div>
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</span>
-                                </div>
-                                <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${s.badgeStyle}`}>{s.badge}</span>
-                            </div>
-                            <div className="flex items-baseline gap-1.5">
-                                <span className={`text-3xl font-extrabold tracking-tight ${s.valueClass || "text-foreground"}`}>{s.value}</span>
-                                <span className="text-xs text-muted-foreground font-medium">{s.unit}</span>
-                            </div>
-                        </CardContent>
-                        <div className="h-1.5 w-full bg-muted">
-                            <div className={`h-full ${s.barColor}`} style={{ width: s.barWidth }} />
+            {/* Metrics strip */}
+            <div className="grid md:grid-cols-3 rounded-xl bg-card ring-1 ring-foreground/10 divide-y md:divide-y-0 md:divide-x divide-border">
+                <div className="p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-muted-foreground">Similarity</span>
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${verdictStyle}`}>{diff.verdict}</span>
+                    </div>
+                    <p className="text-3xl font-bold tracking-tight">{diff.score}%</p>
+                    <div className="h-1 rounded-full bg-muted overflow-hidden">
+                        <div className={`h-full rounded-full ${scoreBar}`} style={{ width: `${diff.score}%` }} />
+                    </div>
+                </div>
+                {stats.map((s) => (
+                    <div key={s.label} className="p-5 space-y-3">
+                        <span className="block text-xs font-medium text-muted-foreground">{s.label}</span>
+                        <p className={`text-3xl font-bold tracking-tight ${s.color}`}>{s.value}</p>
+                        <div className="h-1 rounded-full bg-muted overflow-hidden">
+                            <div className={`h-full rounded-full ${s.bar}`} style={{ width: `${s.share * 100}%` }} />
                         </div>
-                    </Card>
+                    </div>
                 ))}
             </div>
 
