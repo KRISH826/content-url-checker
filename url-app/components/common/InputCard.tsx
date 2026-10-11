@@ -17,8 +17,8 @@ interface InputCardProps {
 }
 
 const InputCard: React.FC<InputCardProps> = ({ onCompare, isLoading = false }) => {
-    const [oldUrl, setOldUrl] = useState("https://www.figtreecabinets.com");
-    const [newUrl, setNewUrl] = useState("https://figtreecabinets.proquantic.work");
+    const [oldUrl, setOldUrl] = useState("");
+    const [newUrl, setNewUrl] = useState("");
 
     const handleSwap = () => {
         const temp = oldUrl;

@@ -13,6 +13,8 @@ import {
     Copy,
     Check,
     TrendingUp,
+    Sparkles,
+    GitCompare,
 } from "lucide-react";
 
 export interface DiffPart {
@@ -38,53 +40,30 @@ export interface DiffData {
 }
 
 interface DiffResultProps {
-    data?: DiffData;
+    data?: DiffData | null;
 }
 
-const mockDefaultData: DiffData = {
-    oldUrl: "https://www.figtreecabinets.com",
-    newUrl: "https://figtreecabinets.proquantic.work",
-    oldTitle: "Kitchen Cabinets Charlotte NC | Custom Cabinetry | Fig Tree Cabinets",
-    newTitle: "Kitchen Cabinets Charlotte NC | Custom Cabinetry | Fig Tree Cabinets",
-    diff: {
-        score: 84,
-        verdict: "Minor Changes",
-        isExactMatch: false,
-        removeWords: 48,
-        addWords: 192,
-        parts: [
-            {
-                value: "High-Quality Cabinets Designed for Your Home and Lifestyle. ",
-            },
-            {
-                value: "Serving homeowners across Charlotte and surrounding areas with functional, budget-friendly cabinetry. ",
-                removed: true,
-            },
-            {
-                value: "Serving homeowners across Charlotte, NC and surrounding areas with functional, budget-friendly, beautifully crafted cabinetry. ",
-                added: true,
-            },
-            {
-                value: "Book a Free Design Consultation or explore our cabinet collections today. ",
-            },
-            {
-                value: "Awarded Charlotte Home Remodeling MVP 2024. ",
-                removed: true,
-            },
-            {
-                value: "Lennar Carolinas Quality Control MVP 2025 & Best Kitchen and Bath Display 2026. ",
-                added: true,
-            },
-            {
-                value: "Designing your space shouldn't feel complicated. We simplify every step — from concept to installation — so you can move forward with confidence.",
-            },
-        ],
-    },
-};
-
-const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
+const DiffResult: React.FC<DiffResultProps> = ({ data }) => {
     const [viewMode, setViewMode] = useState<"unified" | "split">("unified");
     const [copied, setCopied] = useState(false);
+
+    if (!data) {
+        return (
+            <Card className="border-dashed border-border/80 bg-card/40 py-14 text-center">
+                <CardContent className="flex flex-col items-center justify-center space-y-3">
+                    <div className="size-12 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center text-muted-foreground">
+                        <GitCompare className="size-6 text-primary" />
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm font-semibold text-foreground">No comparison data yet</p>
+                        <p className="text-xs text-muted-foreground max-w-sm">
+                            Enter the baseline and target URLs above and click &quot;Run Comparison&quot; to review text and SEO differences.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     const { oldTitle, newTitle, diff, oldUrl, newUrl } = data;
     const isTitleMatch = oldTitle === newTitle;
@@ -96,138 +75,123 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // Verdict color and badge style
-    const getVerdictStyle = (score: number) => {
-        if (score === 100) {
-            return {
-                bg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-                badge: "Identical",
-            };
-        }
-        if (score >= 90) {
-            return {
-                bg: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-                badge: "Minor Changes",
-            };
-        }
-        if (score >= 60) {
-            return {
-                bg: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-                badge: "Moderate Changes",
-            };
-        }
-        return {
-            bg: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
-            badge: "Major Changes",
-        };
-    };
-
-    const verdictStyle = getVerdictStyle(diff.score);
+    const stats = [
+        {
+            label: "Similarity Score",
+            value: `${diff.score}%`,
+            unit: "match",
+            badge: diff.verdict || (diff.score === 100 ? "Identical" : diff.score >= 90 ? "Minor Changes" : diff.score >= 60 ? "Moderate Changes" : "Major Changes"),
+            badgeStyle: diff.score >= 90
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                : diff.score >= 60
+                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+            barColor: diff.score >= 90 ? "bg-emerald-500" : diff.score >= 60 ? "bg-amber-500" : "bg-rose-500",
+            barWidth: `${diff.score}%`,
+            icon: Sparkles,
+            iconClass: "text-primary",
+            iconBg: "bg-primary/10 border-primary/20",
+            desc: "Overall content similarity between pages",
+        },
+        {
+            label: "Added Words",
+            value: `+${diff.addWords.toLocaleString()}`,
+            unit: "words",
+            valueClass: "text-emerald-600 dark:text-emerald-400",
+            badge: "+ Insertions",
+            badgeStyle: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+            barColor: "bg-emerald-500",
+            barWidth: "100%",
+            icon: PlusCircle,
+            iconClass: "text-emerald-600 dark:text-emerald-400",
+            iconBg: "bg-emerald-500/10 border-emerald-500/20",
+            desc: "New words introduced in target URL",
+        },
+        {
+            label: "Removed Words",
+            value: `-${diff.removeWords.toLocaleString()}`,
+            unit: "words",
+            valueClass: "text-rose-600 dark:text-rose-400",
+            badge: "- Deletions",
+            badgeStyle: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+            barColor: "bg-rose-500",
+            barWidth: "100%",
+            icon: MinusCircle,
+            iconClass: "text-rose-600 dark:text-rose-400",
+            iconBg: "bg-rose-500/10 border-rose-500/20",
+            desc: "Original words deleted or replaced",
+        },
+    ];
 
     return (
         <div className="space-y-6">
-            {/* 1. Summary Cards Header (3 Grid Layout) */}
+            {/* 1. Summary 3-Grid Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Similarity Score Card */}
-                <Card className="border-border/60 bg-card/90 shadow-xs relative overflow-hidden">
-                    <CardContent className="p-5 flex items-center justify-between">
-                        <div className="space-y-1">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Similarity Score
-                            </p>
-                            <div className="flex items-baseline gap-1.5">
-                                <span className="text-3xl font-extrabold tracking-tight">
-                                    {diff.score}%
+                {stats.map((item, idx) => (
+                    <Card
+                        key={idx}
+                        className="border-border/60 bg-card/90 shadow-xs relative overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow"
+                    >
+                        <CardContent className="p-5 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <div className={`size-8 rounded-lg border flex items-center justify-center shrink-0 ${item.iconBg}`}>
+                                        <item.icon className={`size-4 ${item.iconClass}`} />
+                                    </div>
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        {item.label}
+                                    </span>
+                                </div>
+                                <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${item.badgeStyle}`}>
+                                    {item.badge}
                                 </span>
-                                <span className="text-xs text-muted-foreground font-medium">match</span>
                             </div>
-                        </div>
-                        <div className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${verdictStyle.bg}`}>
-                            {diff.verdict || verdictStyle.badge}
-                        </div>
-                    </CardContent>
-                    <div className="h-1 w-full bg-muted">
-                        <div
-                            className={`h-full transition-all duration-500 ${diff.score >= 90
-                                ? "bg-emerald-500"
-                                : diff.score >= 60
-                                    ? "bg-amber-500"
-                                    : "bg-rose-500"
-                                }`}
-                            style={{ width: `${diff.score}%` }}
-                        />
-                    </div>
-                </Card>
 
-                {/* Added Words Card */}
-                <Card className="border-border/60 bg-card/90 shadow-xs">
-                    <CardContent className="p-5 flex items-center gap-4">
-                        <div className="size-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                            <PlusCircle className="size-5 text-emerald-600 dark:text-emerald-400" />
+                            <div>
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className={`text-3xl font-extrabold tracking-tight ${item.valueClass || "text-foreground"}`}>
+                                        {item.value}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground font-medium">{item.unit}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                            </div>
+                        </CardContent>
+                        <div className="h-1.5 w-full bg-muted">
+                            <div className={`h-full transition-all duration-500 ${item.barColor}`} style={{ width: item.barWidth }} />
                         </div>
-                        <div className="space-y-0.5">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Added Words
-                            </p>
-                            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                                +{diff.addWords.toLocaleString()}
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Removed Words Card */}
-                <Card className="border-border/60 bg-card/90 shadow-xs">
-                    <CardContent className="p-5 flex items-center gap-4">
-                        <div className="size-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
-                            <MinusCircle className="size-5 text-rose-600 dark:text-rose-400" />
-                        </div>
-                        <div className="space-y-0.5">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Removed Words
-                            </p>
-                            <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">
-                                -{diff.removeWords.toLocaleString()}
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
+                    </Card>
+                ))}
             </div>
 
             {/* 2. SEO Title Comparison Banner */}
             <Card className="border-border/60 bg-card/90 shadow-xs">
                 <CardContent className="p-4 sm:p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/40">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                Page Title (SEO Meta)
+                    <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/40">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            Page Title (SEO Meta)
+                        </span>
+                        {isTitleMatch ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                                <CheckCircle2 className="size-3" /> Exact Match
                             </span>
-                            {isTitleMatch ? (
-                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                                    <CheckCircle2 className="size-3" /> Exact Match
-                                </span>
-                            ) : (
-                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
-                                    <AlertTriangle className="size-3" /> Title Modified
-                                </span>
-                            )}
-                        </div>
+                        ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
+                                <AlertTriangle className="size-3" /> Title Modified
+                            </span>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3">
                         <div className="space-y-1">
-                            <span className="text-[11px] font-medium text-muted-foreground uppercase">
-                                Old Title
-                            </span>
-                            <p className="text-xs font-mono bg-muted/50 p-2.5 rounded-lg border border-border/40 text-foreground">
+                            <span className="text-[11px] font-medium text-muted-foreground uppercase">Old Title</span>
+                            <p className="text-xs font-mono bg-muted/50 p-2.5 rounded-lg border border-border/40 text-foreground truncate">
                                 {oldTitle || "(Empty or not detected)"}
                             </p>
                         </div>
                         <div className="space-y-1">
-                            <span className="text-[11px] font-medium text-muted-foreground uppercase">
-                                New Title
-                            </span>
-                            <p className="text-xs font-mono bg-muted/50 p-2.5 rounded-lg border border-border/40 text-foreground">
+                            <span className="text-[11px] font-medium text-muted-foreground uppercase">New Title</span>
+                            <p className="text-xs font-mono bg-muted/50 p-2.5 rounded-lg border border-border/40 text-foreground truncate">
                                 {newTitle || "(Empty or not detected)"}
                             </p>
                         </div>
@@ -243,12 +207,9 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
                             <TrendingUp className="size-4 text-primary" />
                             Content Comparison Breakdown
                         </CardTitle>
-                        <p className="text-xs text-muted-foreground">
-                            Review additions, removals, and unchanged body copy.
-                        </p>
+                        <p className="text-xs text-muted-foreground">Review additions, removals, and unchanged copy.</p>
                     </div>
 
-                    {/* View Mode & Actions Toolbar */}
                     <div className="flex items-center gap-2">
                         <div className="flex items-center bg-muted p-0.5 rounded-lg border border-border/60">
                             <Button
@@ -271,48 +232,30 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
                             </Button>
                         </div>
 
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleCopy}
-                            className="h-7 px-2.5 text-xs gap-1.5 cursor-pointer"
-                        >
-                            {copied ? (
-                                <>
-                                    <Check className="size-3 text-emerald-500" />
-                                    Copied
-                                </>
-                            ) : (
-                                <>
-                                    <Copy className="size-3" />
-                                    Copy Text
-                                </>
-                            )}
+                        <Button variant="outline" size="sm" onClick={handleCopy} className="h-7 px-2.5 text-xs gap-1.5 cursor-pointer">
+                            {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                            {copied ? "Copied" : "Copy"}
                         </Button>
                     </div>
                 </CardHeader>
 
                 <CardContent className="p-6">
-                    {/* Legend Banner */}
+                    {/* Legend */}
                     <div className="flex flex-wrap items-center gap-4 text-xs pb-4 mb-6 border-b border-border/40 text-muted-foreground">
                         <span className="font-semibold text-foreground">Legend:</span>
                         <span className="inline-flex items-center gap-1.5">
                             <span className="size-2.5 rounded-xs bg-emerald-500/20 border border-emerald-500/40 inline-block" />
-                            <span className="text-emerald-700 dark:text-emerald-400 font-medium">Added to New URL</span>
+                            <span className="text-emerald-700 dark:text-emerald-400 font-medium">Added to Target</span>
                         </span>
                         <span className="inline-flex items-center gap-1.5">
                             <span className="size-2.5 rounded-xs bg-rose-500/20 border border-rose-500/40 inline-block" />
-                            <span className="text-rose-700 dark:text-rose-400 font-medium line-through">Removed from Old URL</span>
-                        </span>
-                        <span className="inline-flex items-center gap-1.5">
-                            <span className="size-2.5 rounded-xs bg-zinc-400/20 border border-zinc-400/40 inline-block" />
-                            <span>Unchanged Copy</span>
+                            <span className="text-rose-700 dark:text-rose-400 font-medium line-through">Removed from Baseline</span>
                         </span>
                     </div>
 
                     {/* Unified View */}
-                    {viewMode === "unified" && (
-                        <div className="prose prose-sm dark:prose-invert max-w-none font-sans text-sm leading-relaxed p-6 rounded-xl bg-muted/20 border border-border/50 select-text whitespace-pre-wrap">
+                    {viewMode === "unified" ? (
+                        <div className="text-sm leading-relaxed p-6 rounded-xl bg-muted/20 border border-border/50 select-text whitespace-pre-wrap">
                             {diff.parts.map((part, index) => {
                                 if (part.added) {
                                     return (
@@ -337,68 +280,48 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
                                 return <span key={index} className="text-foreground/90">{part.value}</span>;
                             })}
                         </div>
-                    )}
-
-                    {/* Split (Side-by-Side) View */}
-                    {viewMode === "split" && (
+                    ) : (
+                        /* Split View */
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Left Column: Old Version */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between pb-2 border-b border-border/50">
                                     <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                         <span className="size-2 rounded-full bg-rose-500" />
-                                        Old Content
+                                        Baseline
                                     </span>
-                                    <span className="text-[11px] text-muted-foreground truncate max-w-50" title={oldUrl}>
-                                        {oldUrl}
-                                    </span>
+                                    <span className="text-[11px] text-muted-foreground truncate max-w-50" title={oldUrl}>{oldUrl}</span>
                                 </div>
                                 <div className="text-sm leading-relaxed p-5 rounded-xl bg-muted/20 border border-border/50 min-h-75 select-text whitespace-pre-wrap">
-                                    {diff.parts
-                                        .filter((part) => !part.added)
-                                        .map((part, index) => {
-                                            if (part.removed) {
-                                                return (
-                                                    <del
-                                                        key={index}
-                                                        className="bg-rose-500/15 text-rose-800 dark:text-rose-300 line-through px-1 py-0.5 rounded-xs box-decoration-clone opacity-80"
-                                                    >
-                                                        {part.value}
-                                                    </del>
-                                                );
-                                            }
-                                            return <span key={index} className="text-foreground/90">{part.value}</span>;
-                                        })}
+                                    {diff.parts.filter((p) => !p.added).map((part, idx) =>
+                                        part.removed ? (
+                                            <del key={idx} className="bg-rose-500/15 text-rose-800 dark:text-rose-300 line-through px-1 py-0.5 rounded-xs box-decoration-clone opacity-80">
+                                                {part.value}
+                                            </del>
+                                        ) : (
+                                            <span key={idx} className="text-foreground/90">{part.value}</span>
+                                        )
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Right Column: New Version */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between pb-2 border-b border-border/50">
                                     <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                         <span className="size-2 rounded-full bg-emerald-500" />
-                                        New Content
+                                        Target
                                     </span>
-                                    <span className="text-[11px] text-muted-foreground truncate max-w-50" title={newUrl}>
-                                        {newUrl}
-                                    </span>
+                                    <span className="text-[11px] text-muted-foreground truncate max-w-50" title={newUrl}>{newUrl}</span>
                                 </div>
                                 <div className="text-sm leading-relaxed p-5 rounded-xl bg-muted/20 border border-border/50 min-h-75 select-text whitespace-pre-wrap">
-                                    {diff.parts
-                                        .filter((part) => !part.removed)
-                                        .map((part, index) => {
-                                            if (part.added) {
-                                                return (
-                                                    <mark
-                                                        key={index}
-                                                        className="bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 border-b-2 border-emerald-500/40 px-1 py-0.5 rounded-xs font-medium box-decoration-clone"
-                                                    >
-                                                        {part.value}
-                                                    </mark>
-                                                );
-                                            }
-                                            return <span key={index} className="text-foreground/90">{part.value}</span>;
-                                        })}
+                                    {diff.parts.filter((p) => !p.removed).map((part, idx) =>
+                                        part.added ? (
+                                            <mark key={idx} className="bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 border-b-2 border-emerald-500/40 px-1 py-0.5 rounded-xs font-medium box-decoration-clone">
+                                                {part.value}
+                                            </mark>
+                                        ) : (
+                                            <span key={idx} className="text-foreground/90">{part.value}</span>
+                                        )
+                                    )}
                                 </div>
                             </div>
                         </div>
