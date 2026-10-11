@@ -1,4 +1,3 @@
-// lib/extractor.ts
 import * as cheerio from 'cheerio';
 
 export interface ExtractedData {
@@ -16,7 +15,7 @@ export async function extractContent(url: string): Promise<ExtractedData> {
     }
 
     if (FORBIDDEN_HOSTS.includes(parsed.hostname)) {
-        throw new Error(`Restricted host access blocked: ${parsed.hostname}`);
+        throw new Error(`Restricted host blocked: ${parsed.hostname}`);
     }
 
     const res = await fetch(parsed.toString(), {
@@ -24,7 +23,7 @@ export async function extractContent(url: string): Promise<ExtractedData> {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ContentAudit/1.0',
             'Accept': 'text/html,application/xhtml+xml',
         },
-        signal: AbortSignal.timeout(8000), // 8-second safety cutoff
+        signal: AbortSignal.timeout(8000),
     });
 
     if (!res.ok) {
@@ -34,13 +33,12 @@ export async function extractContent(url: string): Promise<ExtractedData> {
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // Remove non-content elements
     $('script, style, nav, footer, header, noscript, svg, iframe, form, button, [aria-hidden="true"]').remove();
 
     const container = $('main, article, [role="main"], #content, .content, #main').first();
     const target = container.length ? container : $('body');
 
-    const title = $('title').text().trim();
+    const title = $('title').first().text().trim() || $('h1').first().text().trim() || 'Untitled';
     const text = target.text().replace(/\s+/g, ' ').trim();
 
     return { title, text };
