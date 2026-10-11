@@ -112,7 +112,7 @@ const InputCard: React.FC<InputCardProps> = ({ onCompare, isLoading = false }) =
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full sm:w-auto h-10 px-6 gap-2 font-medium shadow-md shadow-primary/10 transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer"
+                                className="w-full sm:w-auto h-10 px-6 gap-2 font-medium transition-all cursor-pointer"
                             >
                                 {isLoading ? (
                                     <>
