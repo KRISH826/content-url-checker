@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import InputCard from "./InputCard";
 import DiffResult, { DiffData } from "./DiffResult";
-import { GitCompare, Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 const ComparePage = () => {
     const [resultData, setResultData] = useState<DiffData | null>(null);
@@ -80,8 +80,7 @@ const ComparePage = () => {
 
                 {/* Results Section */}
                 <section className="pt-2">
-                    {/* If API result is available, show it; otherwise show demo view so the UI is immediately visible */}
-                    <DiffResult data={resultData || undefined} />
+                    <DiffResult data={resultData} />
                 </section>
             </main>
         </div>

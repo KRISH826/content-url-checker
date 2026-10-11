@@ -56,7 +56,7 @@ const InputCard: React.FC<InputCardProps> = ({ onCompare, isLoading = false }) =
                                     placeholder="https://example.com/original-page"
                                     value={oldUrl}
                                     onChange={(e) => setOldUrl(e.target.value)}
-                                    className="pl-10 h-11 text-sm bg-background border-border/80 focus-visible:ring-primary/20 transition-all font-mono"
+                                    className="pl-10 h-11 text-sm bg-background transition-all font-mono"
                                     required
                                 />
                             </div>
@@ -94,7 +94,7 @@ const InputCard: React.FC<InputCardProps> = ({ onCompare, isLoading = false }) =
                                     placeholder="https://staging.example.com/updated-page"
                                     value={newUrl}
                                     onChange={(e) => setNewUrl(e.target.value)}
-                                    className="pl-10 h-11 text-sm bg-background border-border/80 focus-visible:ring-primary/20 transition-all font-mono"
+                                    className="pl-10 h-11 text-sm bg-background transition-all font-mono"
                                     required
                                 />
                             </div>
