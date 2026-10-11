@@ -6,16 +6,13 @@ import { Button } from "@/components/ui/button";
 import {
     CheckCircle2,
     AlertTriangle,
-    FileText,
     Columns,
     AlignLeft,
-    ArrowUpRight,
     PlusCircle,
     MinusCircle,
     Copy,
     Check,
     TrendingUp,
-    Percent,
 } from "lucide-react";
 
 export interface DiffPart {
@@ -129,8 +126,8 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
 
     return (
         <div className="space-y-6">
-            {/* 1. Summary Cards Header */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* 1. Summary Cards Header (3 Grid Layout) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Similarity Score Card */}
                 <Card className="border-border/60 bg-card/90 shadow-xs relative overflow-hidden">
                     <CardContent className="p-5 flex items-center justify-between">
@@ -191,25 +188,6 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
                             </p>
                             <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">
                                 -{diff.removeWords.toLocaleString()}
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Content Status Card */}
-                <Card className="border-border/60 bg-card/90 shadow-xs">
-                    <CardContent className="p-5 flex items-center gap-4">
-                        <div className="size-10 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
-                            <FileText className="size-5 text-primary" />
-                        </div>
-                        <div className="space-y-0.5">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                Net Delta
-                            </p>
-                            <p className="text-2xl font-bold">
-                                {diff.addWords - diff.removeWords >= 0 ? "+" : ""}
-                                {(diff.addWords - diff.removeWords).toLocaleString()}
-                                <span className="text-xs font-normal text-muted-foreground ml-1">words</span>
                             </p>
                         </div>
                     </CardContent>
@@ -340,7 +318,7 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
                                     return (
                                         <mark
                                             key={index}
-                                            className="bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 border-b-2 border-emerald-500/40 px-1 py-0.5 rounded-xs font-medium decoration-clone"
+                                            className="bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 border-b-2 border-emerald-500/40 px-1 py-0.5 rounded-xs font-medium box-decoration-clone"
                                         >
                                             {part.value}
                                         </mark>
@@ -350,7 +328,7 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
                                     return (
                                         <del
                                             key={index}
-                                            className="bg-rose-500/15 text-rose-800 dark:text-rose-300 line-through decoration-rose-500/60 px-1 py-0.5 rounded-xs font-normal decoration-clone opacity-80"
+                                            className="bg-rose-500/15 text-rose-800 dark:text-rose-300 line-through decoration-rose-500/60 px-1 py-0.5 rounded-xs font-normal box-decoration-clone opacity-80"
                                         >
                                             {part.value}
                                         </del>
@@ -405,7 +383,7 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
                                         {newUrl}
                                     </span>
                                 </div>
-                                <div className="text-sm leading-relaxed p-5 rounded-xl bg-muted/20 border border-border/50 min-h-[300px] select-text whitespace-pre-wrap">
+                                <div className="text-sm leading-relaxed p-5 rounded-xl bg-muted/20 border border-border/50 min-h-75 select-text whitespace-pre-wrap">
                                     {diff.parts
                                         .filter((part) => !part.removed)
                                         .map((part, index) => {
@@ -413,7 +391,7 @@ const DiffResult: React.FC<DiffResultProps> = ({ data = mockDefaultData }) => {
                                                 return (
                                                     <mark
                                                         key={index}
-                                                        className="bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 border-b-2 border-emerald-500/40 px-1 py-0.5 rounded-xs font-medium decoration-clone"
+                                                        className="bg-emerald-500/15 text-emerald-900 dark:text-emerald-200 border-b-2 border-emerald-500/40 px-1 py-0.5 rounded-xs font-medium box-decoration-clone"
                                                     >
                                                         {part.value}
                                                     </mark>
