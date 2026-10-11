@@ -2,6 +2,7 @@ import { diffWordsWithSpace, Change } from 'diff';
 
 export interface DiffResult {
     score: number;
+    verdict: string;
     isExactMatch: boolean;
     removeWords: number;
     addWords: number;
@@ -24,8 +25,14 @@ export function compareText(oldText: string, newText: string): DiffResult {
     const total = equalWords + Math.max(addWords, removeWords);
     const score = total === 0 ? 100 : Math.round((equalWords / total) * 100);
 
+    const verdict =
+        score === 100 ? 'Identical' :
+        score >= 90 ? 'Minor Changes' :
+        score >= 60 ? 'Moderate Changes' : 'Major Changes';
+
     return {
         score,
+        verdict,
         isExactMatch: oldText === newText,
         removeWords,
         addWords,
