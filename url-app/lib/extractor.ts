@@ -158,7 +158,6 @@ async function renderWithBrowser(
         await page.setViewport({ width: 1366, height: 900 });
         await page.setUserAgent(UA);
 
-        // Text only: skip images/media/fonts (CSS still loads, so layout is real)
         await page.setRequestInterception(true);
         page.on('request', (req) => {
             const t = req.resourceType();
