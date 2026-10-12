@@ -37,16 +37,23 @@ const ComparePage = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-slate-50/70 dark:bg-background text-foreground transition-colors selection:bg-primary/10">
-            {/* Premium Ambient Background Gradients */}
+        <div className="relative min-h-screen bg-gradient-to-tr from-slate-100/90 via-indigo-50/40 to-violet-50/60 dark:from-slate-950 dark:via-slate-900 dark:to-zinc-950 text-foreground transition-colors selection:bg-primary/10">
+            {/* Professional Ambient Gradient Mesh */}
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-                {/* Radiant top glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[550px] bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.12),rgba(147,197,253,0.06)_40%,transparent_70%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.18),rgba(147,197,253,0.04)_40%,transparent_70%)]" />
-                {/* Ambient colorful accents */}
-                <div className="absolute -top-24 left-1/4 w-96 h-96 rounded-full bg-indigo-400/8 blur-3xl" />
-                <div className="absolute top-32 right-1/4 w-[420px] h-[420px] rounded-full bg-sky-400/8 blur-3xl" />
-                {/* Subtle bottom fade */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background/90" />
+                {/* Top Center Radiant Indigo Flare */}
+                <div className="absolute -top-36 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.22)_0%,rgba(139,92,246,0.12)_40%,transparent_70%)] blur-2xl" />
+
+                {/* Left Violet Ambient Glow */}
+                <div className="absolute top-12 -left-20 w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.14)_0%,transparent_70%)] blur-3xl" />
+
+                {/* Right Sky/Cyan Ambient Glow */}
+                <div className="absolute top-24 -right-20 w-[550px] h-[550px] rounded-full bg-[radial-gradient(circle,rgba(14,165,233,0.15)_0%,transparent_70%)] blur-3xl" />
+
+                {/* Bottom Center Soft Glow */}
+                <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.1)_0%,transparent_70%)] blur-3xl" />
+
+                {/* Subtle Modern Dot-Matrix Grid */}
+                <div className="absolute inset-0 bg-[radial-gradient(rgba(100,116,139,0.14)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_75%_65%_at_50%_25%,#000_60%,transparent_100%)]" />
             </div>
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-4">

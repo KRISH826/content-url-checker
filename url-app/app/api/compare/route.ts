@@ -29,6 +29,14 @@ export async function POST(req: NextRequest) {
         const oldData = await extractContent(oldUrl);
         const newData = await extractContent(newUrl);
 
+        // Never show a fake "0% match" when a page could not be read at all.
+        if (oldData.lines.length === 0) {
+            throw new Error(`No readable text found on the OLD page (${oldUrl}). It may block bots or need a login.`);
+        }
+        if (newData.lines.length === 0) {
+            throw new Error(`No readable text found on the NEW page (${newUrl}). It may block bots or need a login.`);
+        }
+
         const diff = compareLines(oldData.lines, newData.lines);
 
         return NextResponse.json({
