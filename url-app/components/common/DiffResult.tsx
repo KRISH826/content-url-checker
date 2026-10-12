@@ -11,11 +11,10 @@ import {
     Copy,
     Check,
     GitCompare,
-    Filter,
 } from "lucide-react";
 
 export interface DiffLine {
-    tag: string; // 'h1'..'h6' | 'text'
+    tag: string; // 'h1'..'h6' | 'text' (badge only, never used for matching)
     text: string;
 }
 
@@ -30,7 +29,7 @@ export interface DiffRow {
     new?: DiffLine;
     oldSegments?: DiffSegment[];
     newSegments?: DiffSegment[];
-    tagChanged?: boolean;
+    moved?: boolean;
 }
 
 export interface DiffData {
@@ -46,7 +45,7 @@ export interface DiffData {
         isExactMatch: boolean;
         removeWords: number;
         addWords: number;
-        tagChanges: number;
+        movedLines: number;
         rows: DiffRow[];
     };
 }
@@ -71,14 +70,13 @@ const TAG_TEXT: Record<string, string> = {
     h6: "text-sm font-medium",
 };
 
+// Only two colours carry meaning: red = only on the old page, green = only on the new page.
 const TONE: Record<string, string> = {
     rose: "bg-rose-500/10 border-l-2 border-rose-400",
     emerald: "bg-emerald-500/10 border-l-2 border-emerald-400",
-    amber: "bg-amber-500/10 border-l-2 border-amber-400",
     "": "",
 };
 
-const tagLabel = (t: string) => (t === "text" ? "normal text" : t.toUpperCase());
 const looseEqual = (a: string, b: string) =>
     a.trim().replace(/\s+/g, " ").toLowerCase() === b.trim().replace(/\s+/g, " ").toLowerCase();
 
@@ -133,20 +131,18 @@ const Gutter = ({ kind }: { kind: "removed" | "added" }) => (
     </span>
 );
 
-const TagNote = ({ row }: { row: DiffRow }) =>
-    row.tagChanged && row.old && row.new ? (
-        <p className="pl-9 pt-0.5 text-[11px] font-medium text-amber-600">
-            Tag changed: {tagLabel(row.old.tag)} → {tagLabel(row.new.tag)}
-        </p>
+const MovedNote = ({ row }: { row: DiffRow }) =>
+    row.moved ? (
+        <p className="pl-9 pt-0.5 text-[11px] text-muted-foreground">Same content, different position (not a difference)</p>
     ) : null;
 
 const UnifiedRow = ({ row }: { row: DiffRow }) => {
     switch (row.kind) {
         case "same":
             return (
-                <div className={`px-3 py-1.5 ${row.tagChanged ? TONE.amber : ""}`}>
+                <div className="px-3 py-1.5">
                     <LineView line={row.new!} />
-                    <TagNote row={row} />
+                    <MovedNote row={row} />
                 </div>
             );
         case "removed":
@@ -165,7 +161,7 @@ const UnifiedRow = ({ row }: { row: DiffRow }) => {
             );
         case "changed":
             return (
-                <div className={`space-y-1 px-3 py-1.5 ${TONE.amber}`}>
+                <div className="space-y-1 px-3 py-1.5">
                     <div className="flex gap-2">
                         <Gutter kind="removed" />
                         <LineView line={row.old!} segments={row.oldSegments} tone="removed" />
@@ -174,7 +170,7 @@ const UnifiedRow = ({ row }: { row: DiffRow }) => {
                         <Gutter kind="added" />
                         <LineView line={row.new!} segments={row.newSegments} tone="added" />
                     </div>
-                    <TagNote row={row} />
+                    <MovedNote row={row} />
                 </div>
             );
         default:
@@ -187,16 +183,12 @@ const Cell = ({ row, side }: { row: DiffRow; side: "old" | "new" }) => {
     if (!line) return <div className="hidden min-h-8 rounded-md bg-muted/30 lg:block" />;
 
     const segments = side === "old" ? row.oldSegments : row.newSegments;
-    const tone =
-        row.kind === "changed" ? "amber" :
-            row.kind === "removed" ? "rose" :
-                row.kind === "added" ? "emerald" :
-                    row.tagChanged ? "amber" : "";
+    const tone = row.kind === "removed" ? "rose" : row.kind === "added" ? "emerald" : "";
 
     return (
         <div className={`px-3 py-1.5 ${TONE[tone]}`}>
             <LineView line={line} segments={segments} tone={side === "old" ? "removed" : "added"} />
-            {side === "new" && <TagNote row={row} />}
+            {side === "new" && <MovedNote row={row} />}
         </div>
     );
 };
@@ -212,7 +204,6 @@ const SplitRow = ({ row }: { row: DiffRow }) => (
 
 const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
     const [viewMode, setViewMode] = useState<"unified" | "split">("split");
-    const [onlyChanges, setOnlyChanges] = useState(false);
     const [copied, setCopied] = useState(false);
 
     if (!data) {
@@ -231,7 +222,7 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
 
     const { oldTitle, newTitle, diff, oldUrl, newUrl, oldMode, newMode } = data;
     const rows = diff.rows;
-    const visibleRows = onlyChanges ? rows.filter((r) => r.kind !== "same" || r.tagChanged) : rows;
+    const visibleRows = rows;
 
     const handleCopy = () => {
         const report = rows
@@ -239,7 +230,6 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
                 if (r.kind === "removed") return `- ${r.old!.text}`;
                 if (r.kind === "added") return `+ ${r.new!.text}`;
                 if (r.kind === "changed") return `- ${r.old!.text}\n+ ${r.new!.text}`;
-                if (r.tagChanged) return `~ [${tagLabel(r.old!.tag)} -> ${tagLabel(r.new!.tag)}] ${r.new!.text}`;
                 return null;
             })
             .filter(Boolean)
@@ -258,9 +248,8 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
                 : "bg-rose-500/10 text-rose-700";
     const totalChanged = diff.addWords + diff.removeWords || 1;
     const stats = [
-        { label: "Added words", value: `+${diff.addWords.toLocaleString()}`, color: "text-emerald-600", bar: "bg-emerald-500", share: diff.addWords / totalChanged },
-        { label: "Removed words", value: `−${diff.removeWords.toLocaleString()}`, color: "text-rose-600", bar: "bg-rose-500", share: diff.removeWords / totalChanged },
-        { label: "Heading / tag changes", value: diff.tagChanges.toLocaleString(), color: "text-amber-600", bar: "bg-amber-500", share: undefined as number | undefined },
+        { label: "Only on new page (words)", value: `+${diff.addWords.toLocaleString()}`, color: "text-emerald-600", bar: "bg-emerald-500", share: diff.addWords / totalChanged },
+        { label: "Only on old page (words)", value: `−${diff.removeWords.toLocaleString()}`, color: "text-rose-600", bar: "bg-rose-500", share: diff.removeWords / totalChanged },
     ];
     const titlesMatch = looseEqual(oldTitle, newTitle);
     const staticUsed = oldMode === "static" || newMode === "static";
@@ -280,7 +269,7 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
             )}
 
             {/* Metrics strip */}
-            <div className="grid md:grid-cols-4 rounded-xl bg-card ring-1 ring-foreground/10 divide-y md:divide-y-0 md:divide-x divide-border">
+            <div className="grid md:grid-cols-3 rounded-xl bg-card ring-1 ring-foreground/10 divide-y md:divide-y-0 md:divide-x divide-border">
                 <div className="p-5 space-y-3">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-muted-foreground">Content match</span>
@@ -296,9 +285,7 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
                         <span className="block text-xs font-medium text-muted-foreground">{s.label}</span>
                         <p className={`text-3xl font-bold tracking-tight ${s.color}`}>{s.value}</p>
                         <div className="h-1 rounded-full bg-muted overflow-hidden">
-                            {s.share !== undefined && (
-                                <div className={`h-full rounded-full ${s.bar}`} style={{ width: `${s.share * 100}%` }} />
-                            )}
+                            <div className={`h-full rounded-full ${s.bar}`} style={{ width: `${s.share * 100}%` }} />
                         </div>
                     </div>
                 ))}
@@ -338,9 +325,10 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
                     <div>
                         <CardTitle className="text-base font-semibold">Content Comparison</CardTitle>
                         <p className="mt-1 text-xs text-muted-foreground">
-                            Matches words only: capital letters, punctuation and spacing are ignored.{" "}
-                            <span className="inline-block rounded bg-blue-500/15 px-1 font-mono text-[10px] font-bold uppercase text-blue-700 dark:text-blue-300">h2</span>{" "}
-                            badges show the heading tag of each line.
+                            <span className="font-semibold text-rose-600">Red</span> = text only on the old page.{" "}
+                            <span className="font-semibold text-emerald-600">Green</span> = text only on the new page.
+                            Capitals, punctuation, heading level and position are ignored. Header, footer and menus are skipped.
+                            {diff.movedLines > 0 && ` ${diff.movedLines} line(s) exist on both pages at a different position.`}
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -352,12 +340,9 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
                                 <Columns className="size-3.5" /> Side-by-Side
                             </Button>
                         </div>
-                        <Button variant={onlyChanges ? "default" : "outline"} size="sm" onClick={() => setOnlyChanges((v) => !v)} className="h-7 px-2.5 text-xs gap-1.5 cursor-pointer">
-                            <Filter className="size-3" /> Only changes
-                        </Button>
                         <Button variant="outline" size="sm" onClick={handleCopy} className="h-7 px-2.5 text-xs gap-1.5 cursor-pointer">
                             {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
-                            {copied ? "Copied" : "Copy changes"}
+                            {copied ? "Copied" : "Copy differences"}
                         </Button>
                     </div>
                 </CardHeader>
@@ -378,7 +363,7 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
                     <div className="max-h-[75vh] overflow-y-auto rounded-xl border border-border/50 bg-muted/20 py-1">
                         {visibleRows.length === 0 ? (
                             <p className="p-6 text-center text-sm text-muted-foreground">
-                                No content differences. Both pages have the same words and headings.
+                                No content differences. Both pages have the same words.
                             </p>
                         ) : (
                             visibleRows.map((row, i) =>

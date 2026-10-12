@@ -65,6 +65,10 @@ export function normalizeText(s: string): string {
         .trim();
 }
 
+/** id / class names that mean "site header, footer or menu" (exact word match, so "entry-header" is NOT matched) */
+const CHROME_TOKEN =
+    /^((site|main|page|global)-)?(header|footer)$|^(masthead|navbar|topbar|top-bar|site-nav|main-nav|main-menu|site-info|elementor-location-(header|footer)|et-top-navigation)$/;
+
 const SKIP_LINE = /^skip to (main )?(content|navigation)$/i;
 
 function cleanLines(raw: ContentLine[]): ContentLine[] {
@@ -171,27 +175,55 @@ async function renderWithBrowser(
         assertPublicUrl(page.url()); // re-check after redirects
 
         // Scroll through the page so lazy-loaded / on-scroll sections render
-        await page.evaluate(async () => {
-            await new Promise<void>((resolve) => {
-                let y = 0;
-                const timer = setInterval(() => {
-                    window.scrollBy(0, 600);
-                    y += 600;
-                    if (y >= document.body.scrollHeight + 600 || y > 30000) {
+        // Wrapped in try-catch with strict bounds so scrolling quirks (SPAs, redirects, infinite scroll) never break extraction
+        try {
+            await page.evaluate(async () => {
+                await new Promise<void>((resolve) => {
+                    let y = 0;
+                    let steps = 0;
+                    const maxSteps = 20; // max ~2 seconds
+                    const stepSize = 600;
+
+                    const timer = setInterval(() => {
+                        try {
+                            window.scrollBy(0, stepSize);
+                            y += stepSize;
+                            steps++;
+
+                            const maxScroll = Math.max(
+                                document.body?.scrollHeight || 0,
+                                document.documentElement?.scrollHeight || 0
+                            );
+
+                            if ((maxScroll > 0 && y >= maxScroll + stepSize) || steps >= maxSteps || y > 20000) {
+                                clearInterval(timer);
+                                window.scrollTo(0, 0);
+                                resolve();
+                            }
+                        } catch {
+                            clearInterval(timer);
+                            resolve();
+                        }
+                    }, 100);
+
+                    // Safety watchdog: guarantee resolution within 2.5s
+                    setTimeout(() => {
                         clearInterval(timer);
-                        window.scrollTo(0, 0);
+                        try { window.scrollTo(0, 0); } catch { /* ignore */ }
                         resolve();
-                    }
-                }, 120);
+                    }, 2500);
+                });
             });
-        });
-        await new Promise((r) => setTimeout(r, 800));
+            await new Promise((r) => setTimeout(r, 400));
+        } catch {
+            // Non-critical: if auto-scroll fails or page navigated, continue with extraction
+        }
 
         // This function runs INSIDE the page, so it can use real computed CSS.
         // Block-level / flex / grid items start a new line, inline text stays together,
         // so "Collaborations" + "Service Areas" + "Blog" never glue together, and a
         // <ul><li> menu and a <div> menu give the same lines.
-        const lines = await page.evaluate((onlyMain: boolean) => {
+        const lines = await page.evaluate((onlyMain: boolean, chromeSrc: string) => {
             const out: { tag: string; text: string }[] = [];
             let buf = '';
             let heading: string | null = null;
@@ -202,6 +234,35 @@ async function renderWithBrowser(
                 'VIDEO', 'AUDIO',
             ]);
             const NOISE = /cookie|consent|cmplz|onetrust|cookiebot|gdpr/i;
+            const CHROME = new RegExp(chromeSrc);
+
+            // Site header / footer / menus are NOT page content, skip them.
+            const isChrome = (el: HTMLElement): boolean => {
+                const tag = el.tagName;
+                const role = el.getAttribute('role');
+                const type = el.getAttribute('data-elementor-type');
+                const tokens = [el.id, ...(typeof el.className === 'string' ? el.className.split(/\s+/) : [])];
+                const isHF = tag === 'HEADER' || tag === 'FOOTER';
+                const matches =
+                    isHF ||
+                    tag === 'NAV' ||
+                    role === 'banner' ||
+                    role === 'contentinfo' ||
+                    role === 'navigation' ||
+                    type === 'header' ||
+                    type === 'footer' ||
+                    tokens.some((t) => !!t && CHROME.test(t.toLowerCase()));
+                if (!matches) return false;
+
+                const parent = el.parentElement;
+                // anything inside <main>/<article> belongs to the content
+                if (parent?.closest('main, article, [role="main"]')) return false;
+                // a <header>/<footer> of a section or card belongs to that section
+                if (isHF && parent?.closest('section, aside')) return false;
+                // a "header" that carries the page <h1> is the hero, not site chrome
+                if (el.querySelector('h1')) return false;
+                return true;
+            };
 
             const flush = () => {
                 const t = buf.replace(/\s+/g, ' ').trim();
@@ -240,6 +301,7 @@ async function renderWithBrowser(
                     return;
                 }
                 if (SKIP_TAGS.has(tag)) return;
+                if (isChrome(node)) return;
 
                 const cls = typeof node.className === 'string' ? node.className : '';
                 if (NOISE.test(node.id) || NOISE.test(cls)) return;
@@ -264,16 +326,16 @@ async function renderWithBrowser(
                 if (isInlineBox) buf += ' ';
             };
 
-            let root: HTMLElement = document.body;
+            let root: HTMLElement | null = document.body || document.documentElement;
             if (onlyMain) {
                 const m = document.querySelector<HTMLElement>('main, [role="main"], article');
                 if (m && (m.innerText || '').trim().length > 200) root = m;
             }
 
-            walk(root);
+            if (root) walk(root);
             flush();
             return out;
-        }, mainOnly);
+        }, mainOnly, CHROME_TOKEN.source);
 
         return { lines, title: await page.title() };
     } finally {
@@ -322,8 +384,35 @@ export function extractLinesFromHtml(
     $(
         '[style*="display:none"], [style*="display: none"], [style*="visibility:hidden"], [style*="visibility: hidden"]'
     ).remove();
+    // cookie banners + site header / footer / menus (same rules as browser mode)
     $('body *')
-        .filter((_, el) => NOISE.test($(el).attr('id') ?? '') || NOISE.test($(el).attr('class') ?? ''))
+        .filter((_, el) => {
+            const $el = $(el);
+            const id = $el.attr('id') ?? '';
+            const cls = $el.attr('class') ?? '';
+            if (NOISE.test(id) || NOISE.test(cls)) return true;
+
+            const tag = (el as unknown as DomNode).name?.toLowerCase() ?? '';
+            const role = $el.attr('role');
+            const type = $el.attr('data-elementor-type');
+            const isHF = tag === 'header' || tag === 'footer';
+            const tokens = [id, ...cls.split(/\s+/)];
+            const matches =
+                isHF ||
+                tag === 'nav' ||
+                role === 'banner' ||
+                role === 'contentinfo' ||
+                role === 'navigation' ||
+                type === 'header' ||
+                type === 'footer' ||
+                tokens.some((t) => !!t && CHROME_TOKEN.test(t.toLowerCase()));
+            if (!matches) return false;
+
+            if ($el.parent().closest('main, article, [role="main"]').length) return false;
+            if (isHF && $el.parent().closest('section, aside').length) return false;
+            if ($el.find('h1').length) return false;
+            return true;
+        })
         .remove();
 
     let root = $('body').get(0) as unknown as DomNode | undefined;
