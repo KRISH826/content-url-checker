@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Header from "./Header";
 import InputCard from "./InputCard";
 import DiffResult, { DiffData } from "./DiffResult";
 import { Sparkles } from "lucide-react";
@@ -38,7 +39,10 @@ const ComparePage = () => {
 
     return (
         <div className="relative min-h-screen bg-gradient-to-tr from-slate-100/90 via-indigo-50/40 to-violet-50/60 dark:from-slate-950 dark:via-slate-900 dark:to-zinc-950 text-foreground transition-colors selection:bg-primary/10">
-            {/* Professional Ambient Gradient Mesh */}
+            {/* Top Navigation Header */}
+            <Header activeTab="content" />
+
+            {/* Professional Ambient Gradient Mesh (No dots) */}
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
                 {/* Top Center Radiant Indigo Flare */}
                 <div className="absolute -top-36 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.22)_0%,rgba(139,92,246,0.12)_40%,transparent_70%)] blur-2xl" />
@@ -51,9 +55,6 @@ const ComparePage = () => {
 
                 {/* Bottom Center Soft Glow */}
                 <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.1)_0%,transparent_70%)] blur-3xl" />
-
-                {/* Subtle Modern Dot-Matrix Grid */}
-                <div className="absolute inset-0 bg-[radial-gradient(rgba(100,116,139,0.14)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_75%_65%_at_50%_25%,#000_60%,transparent_100%)]" />
             </div>
 
             <main className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-4">
