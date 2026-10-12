@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { FileText, Link2, Image, Layers, Sparkles } from "lucide-react";
 
 interface HeaderProps {
     activeTab?: "content" | "links" | "images";
@@ -10,84 +9,78 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between gap-6">
                 {/* Brand / Logo */}
-                <div className="flex items-center gap-6">
-                    <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-90">
-                        <div className="size-8 rounded-lg bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-xs">
-                            <Layers className="size-4.5" />
+                <div className="flex items-center gap-6 sm:gap-8">
+                    <Link
+                        href="/"
+                        className="flex items-center gap-2 text-foreground font-semibold text-sm tracking-tight hover:opacity-80 transition-opacity"
+                    >
+                        <div className="size-6 rounded-md bg-foreground text-background flex items-center justify-center font-bold">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="size-3.5"
+                            >
+                                <path d="m18 16 4-4-4-4" />
+                                <path d="m6 8-4 4 4 4" />
+                                <path d="m14.5 4-5 16" />
+                            </svg>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-sm font-bold tracking-tight leading-none text-foreground flex items-center gap-1.5">
-                                URL Auditor
-                                <span className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-1.5 py-0.2 rounded border border-indigo-500/20">
-                                    Pro
-                                </span>
-                            </span>
-                            <span className="text-[10px] text-muted-foreground leading-tight mt-0.5 hidden sm:inline">
-                                Web Suite
-                            </span>
-                        </div>
+                        <span className="font-semibold text-sm tracking-tight">Content Auditor</span>
                     </Link>
 
                     {/* Navigation Menu */}
-                    <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/40">
+                    <nav className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm">
                         <Link
                             href="/"
-                            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                            className={`relative py-3 transition-colors ${
                                 activeTab === "content"
-                                    ? "bg-background text-foreground shadow-xs font-semibold"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                                    ? "text-foreground font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-foreground"
+                                    : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
-                            <FileText className="size-3.5 text-indigo-500" />
                             Content Checker
                         </Link>
 
                         <button
                             type="button"
-                            title="Link Checker (Coming soon)"
-                            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                            className={`relative py-3 transition-colors cursor-pointer ${
                                 activeTab === "links"
-                                    ? "bg-background text-foreground shadow-xs font-semibold"
-                                    : "text-muted-foreground/80 hover:text-foreground hover:bg-background/50"
+                                    ? "text-foreground font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-foreground"
+                                    : "text-muted-foreground/80 hover:text-foreground"
                             }`}
                         >
-                            <Link2 className="size-3.5 text-sky-500" />
                             Link Checker
-                            <span className="text-[9px] font-normal text-muted-foreground px-1 py-0.2 bg-muted rounded">Soon</span>
                         </button>
 
                         <button
                             type="button"
-                            title="Image Extractor (Coming soon)"
-                            className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                            className={`relative py-3 transition-colors cursor-pointer ${
                                 activeTab === "images"
-                                    ? "bg-background text-foreground shadow-xs font-semibold"
-                                    : "text-muted-foreground/80 hover:text-foreground hover:bg-background/50"
+                                    ? "text-foreground font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-foreground"
+                                    : "text-muted-foreground/80 hover:text-foreground"
                             }`}
                         >
-                            <Image className="size-3.5 text-violet-500" />
                             Image Extractor
-                            <span className="text-[9px] font-normal text-muted-foreground px-1 py-0.2 bg-muted rounded">Soon</span>
                         </button>
                     </nav>
                 </div>
 
-                {/* Right side status / badge */}
-                <div className="flex items-center gap-2">
-                    <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Live Engine
-                    </div>
-
-                    {/* Mobile Navigation Pills */}
-                    <div className="flex md:hidden items-center gap-1">
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-background shadow-xs border border-border/40 text-foreground flex items-center gap-1">
-                            <FileText className="size-3 text-indigo-500" /> Content
-                        </span>
-                    </div>
+                {/* Right side status / meta */}
+                <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-mono text-muted-foreground/70 hidden sm:inline">
+                        v1.0
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                        <span className="size-1.5 rounded-full bg-emerald-500" />
+                        Online
+                    </span>
                 </div>
             </div>
         </header>
