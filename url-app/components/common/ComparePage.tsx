@@ -57,23 +57,21 @@ const ComparePage = () => {
                 <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.1)_0%,transparent_70%)] blur-3xl" />
             </div>
 
-            <main className="max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-6 space-y-4">
+            <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 pb-12 space-y-3.5">
                 {/* Compact Page Header */}
-                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-border/40">
-                    <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-lg sm:text-xl font-bold tracking-tight">
-                                URL Content Comparison
-                            </h1>
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
-                                <Sparkles className="size-3" />
-                                Content Auditor
-                            </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            Detect additions, removals, and SEO metadata changes between any two web pages.
-                        </p>
+                <header className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+                            URL Content Comparison
+                        </h1>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                            <Sparkles className="size-3" />
+                            Visual Diff
+                        </span>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                        Detect additions, removals, and SEO metadata changes between any two web pages.
+                    </p>
                 </header>
 
                 {/* Input Card */}

@@ -9,15 +9,15 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between gap-6">
+        <header className="sticky border-b border-gray-50 shadow-xs top-0 z-50 w-full bg-background/60 backdrop-blur-md">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-6">
                 {/* Brand / Logo */}
-                <div className="flex items-center gap-6 sm:gap-8">
+                <div className="flex items-center gap-8 lg:gap-10">
                     <Link
                         href="/"
-                        className="flex items-center gap-2 text-foreground font-semibold text-sm tracking-tight hover:opacity-80 transition-opacity"
+                        className="flex items-center gap-2.5 text-foreground font-semibold text-sm sm:text-base tracking-tight hover:opacity-85 transition-opacity"
                     >
-                        <div className="size-6 rounded-md bg-foreground text-background flex items-center justify-center font-bold">
+                        <div className="size-7 rounded-lg bg-foreground text-background flex items-center justify-center font-bold shadow-xs">
                             <svg
                                 viewBox="0 0 24 24"
                                 fill="none"
@@ -25,60 +25,57 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
                                 strokeWidth="2.2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                className="size-3.5"
+                                className="size-4"
                             >
                                 <path d="m18 16 4-4-4-4" />
                                 <path d="m6 8-4 4 4 4" />
                                 <path d="m14.5 4-5 16" />
                             </svg>
                         </div>
-                        <span className="font-semibold text-sm tracking-tight">Content Auditor</span>
+                        <span className="font-bold tracking-tight">Content Auditor</span>
                     </Link>
 
-                    {/* Navigation Menu */}
-                    <nav className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm">
+                    {/* Navigation Menu (clean, borderless, seamless tabs) */}
+                    <nav className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                         <Link
                             href="/"
-                            className={`relative py-3 transition-colors ${
-                                activeTab === "content"
-                                    ? "text-foreground font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-foreground"
-                                    : "text-muted-foreground hover:text-foreground"
-                            }`}
+                            className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === "content"
+                                ? "bg-foreground/8 text-foreground font-semibold"
+                                : "text-muted-foreground hover:text-foreground hover:bg-foreground/4 font-medium"
+                                }`}
                         >
                             Content Checker
                         </Link>
 
                         <button
                             type="button"
-                            className={`relative py-3 transition-colors cursor-pointer ${
-                                activeTab === "links"
-                                    ? "text-foreground font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-foreground"
-                                    : "text-muted-foreground/80 hover:text-foreground"
-                            }`}
+                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === "links"
+                                ? "bg-foreground/8 text-foreground font-semibold"
+                                : "text-muted-foreground/80 hover:text-foreground hover:bg-foreground/4 font-medium"
+                                }`}
                         >
                             Link Checker
                         </button>
 
                         <button
                             type="button"
-                            className={`relative py-3 transition-colors cursor-pointer ${
-                                activeTab === "images"
-                                    ? "text-foreground font-semibold after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 after:bg-foreground"
-                                    : "text-muted-foreground/80 hover:text-foreground"
-                            }`}
+                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === "images"
+                                ? "bg-foreground/8 text-foreground font-semibold"
+                                : "text-muted-foreground/80 hover:text-foreground hover:bg-foreground/4 font-medium"
+                                }`}
                         >
                             Image Extractor
                         </button>
                     </nav>
                 </div>
 
-                {/* Right side status / meta */}
+                {/* Right side status */}
                 <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-mono text-muted-foreground/70 hidden sm:inline">
+                    <span className="text-xs font-mono text-muted-foreground hidden sm:inline">
                         v1.0
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
-                        <span className="size-1.5 rounded-full bg-emerald-500" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
+                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         Online
                     </span>
                 </div>

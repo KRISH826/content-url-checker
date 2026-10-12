@@ -208,10 +208,10 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
 
     if (!data) {
         return (
-            <Card className="border-dashed border-border/80 bg-card/40 py-12 text-center">
-                <CardContent className="flex flex-col items-center justify-center space-y-2">
-                    <div className="size-10 rounded-xl bg-primary/5 flex items-center justify-center text-muted-foreground">
-                        <GitCompare className="size-5 text-primary" />
+            <Card className="border-dashed border-border/80 bg-card/40 py-6 sm:py-7 text-center rounded-xl">
+                <CardContent className="flex flex-col items-center justify-center space-y-1.5 p-4">
+                    <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-muted-foreground">
+                        <GitCompare className="size-4 text-primary" />
                     </div>
                     <p className="text-sm font-semibold text-foreground">No comparison data yet</p>
                     <p className="text-xs text-muted-foreground">Enter two URLs above and click &quot;Run Comparison&quot;.</p>
