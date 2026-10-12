@@ -1,9 +1,12 @@
-import { Queue } from "bullmq";
+import { Queue, QueueEvents } from "bullmq";
 import { redis } from "./redis";
 
 export const QUEUE_NAME = "compare-queue";
 
-const globalQueue = globalThis as unknown as { compareQueue?: Queue };
+const globalQueue = globalThis as unknown as {
+    compareQueue?: Queue;
+    queueEvents?: QueueEvents;
+};
 
 export const compareQueue =
     globalQueue.compareQueue ??
@@ -17,4 +20,11 @@ export const compareQueue =
         },
     });
 
-if (process.env.NODE_ENV !== "production") globalQueue.compareQueue = compareQueue;
+export const queueEvents =
+    globalQueue.queueEvents ??
+    new QueueEvents(QUEUE_NAME, { connection: redis });
+
+if (process.env.NODE_ENV !== "production") {
+    globalQueue.compareQueue = compareQueue;
+    globalQueue.queueEvents = queueEvents;
+}

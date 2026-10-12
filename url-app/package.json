@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "worker": "tsx watch lib/worker.ts",
     "lint": "eslint"
   },
   "dependencies": {
@@ -39,12 +40,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   },
-  "packageManager": "pnpm@11.0.9",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "msgpackr-extract"
-    ]
-  }
+  "packageManager": "pnpm@11.0.9"
 }

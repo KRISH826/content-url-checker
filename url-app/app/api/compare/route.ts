@@ -1,5 +1,6 @@
 import { compareLines } from "@/lib/diff";
 import { extractContent } from "@/lib/extractor";
+import { compareQueue, queueEvents } from "@/lib/queue";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod';
 
@@ -25,17 +26,25 @@ export async function POST(req: NextRequest) {
 
         const { oldUrl, newUrl, id } = validation.data;
 
-        // Concurrent extraction for speed
+        // 1. Delegate to BullMQ worker if active
+        try {
+            const job = await compareQueue.add("urls", { oldUrl, newUrl, id });
+            const result = await job.waitUntilFinished(queueEvents, 10000);
+            return NextResponse.json({ success: true, data: result });
+        } catch {
+            // 2. Direct fallback (Static-First <1.5s) if worker is not polling
+        }
+
         const [oldData, newData] = await Promise.all([
             extractContent(oldUrl),
             extractContent(newUrl),
         ]);
 
         if (oldData.lines.length === 0) {
-            throw new Error(`No readable text found on the baseline page (${oldUrl}). It may block bots or require a login.`);
+            throw new Error(`No readable text found on the baseline page (${oldUrl}).`);
         }
         if (newData.lines.length === 0) {
-            throw new Error(`No readable text found on the target page (${newUrl}). It may block bots or require a login.`);
+            throw new Error(`No readable text found on the target page (${newUrl}).`);
         }
 
         const diff = compareLines(oldData.lines, newData.lines);

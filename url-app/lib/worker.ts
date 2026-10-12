@@ -40,6 +40,14 @@ export const compareWorker = new Worker(
     { connection: redis, concurrency: 4 }
 );
 
+compareWorker.on("ready", () => {
+    console.log(`🚀 [Worker] Connected to Redis and listening on queue "${QUEUE_NAME}"`);
+});
+
+compareWorker.on("completed", (j) => {
+    console.log(`✓ [Worker] Job ${j.id} completed successfully`);
+});
+
 compareWorker.on("failed", (j, err) => {
-    console.error(`[Worker] Job ${j?.id} failed:`, err.message);
+    console.error(`✕ [Worker] Job ${j?.id} failed:`, err.message);
 });

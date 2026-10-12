@@ -171,32 +171,34 @@ async function readStatic(url: string) {
 
 export async function extractContent(url: string): Promise<ExtractedData> {
     const parsed = assertPublicUrl(url);
-    let mode: ExtractedData['mode'] = 'browser';
     let lines: ContentLine[] = [];
     let title = '';
     let note = '';
 
+    // 1. FAST PATH: Instant Cheerio extraction (< 600ms)
+    try {
+        const s = await readStatic(parsed.toString());
+        if (wordCount(s.lines) >= MIN_WORDS) {
+            title = normalizeText(s.title) || s.lines.find((l) => l.tag === 'h1')?.text || 'Untitled';
+            return { title, lines: s.lines, text: s.lines.map((l) => l.text).join('\n'), mode: 'static' };
+        }
+    } catch (err) {
+        note = `static: ${err instanceof Error ? err.message : String(err)}`;
+    }
+
+    // 2. SLOW PATH FALLBACK: Headless Browser (only for client-rendered SPAs)
     try {
         const r = await readWithBrowser(parsed.toString());
         lines = toLines(r.text, r.headings);
         title = r.title;
         note = `browser HTTP ${r.status ?? '?'}, final URL ${r.finalUrl}`;
     } catch (err) {
-        note = `browser error: ${err instanceof Error ? err.message : String(err)}`;
+        note = `${note} | browser: ${err instanceof Error ? err.message : String(err)}`;
         console.warn(`Browser read failed for ${url}:`, err);
-    }
-
-    if (wordCount(lines) < MIN_WORDS) {
-        mode = 'static';
-        const s = await readStatic(parsed.toString());
-        if (s.lines.length > lines.length) {
-            lines = s.lines;
-            title = title || s.title;
-        }
     }
 
     if (lines.length === 0) throw new Error(`No readable text found on ${url} (${note})`);
 
     title = normalizeText(title) || lines.find((l) => l.tag === 'h1')?.text || 'Untitled';
-    return { title, lines, text: lines.map((l) => l.text).join('\n'), mode };
+    return { title, lines, text: lines.map((l) => l.text).join('\n'), mode: 'browser' };
 }
