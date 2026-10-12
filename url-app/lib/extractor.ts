@@ -102,13 +102,26 @@ async function readWithBrowser(url: string) {
         await page.setViewport({ width: 1366, height: 900 });
         await page.evaluateOnNewDocument('window.__name = window.__name || function (f) { return f; };');
         await page.setRequestInterception(true);
-        page.on('request', (r) => (['image', 'media', 'font'].includes(r.resourceType()) ? void r.abort() : void r.continue()));
+        const BLOCKED_DOMAINS = ['google-analytics', 'googletagmanager', 'facebook.net', 'hotjar', 'doubleclick', 'clarity.ms'];
+        page.on('request', (r) => {
+            try {
+                const type = r.resourceType();
+                const u = r.url();
+                if (['image', 'media', 'font'].includes(type) || BLOCKED_DOMAINS.some((d) => u.includes(d))) {
+                    r.abort().catch(() => {});
+                } else {
+                    r.continue().catch(() => {});
+                }
+            } catch {
+                // Ignore if request already resolved/aborted
+            }
+        });
 
-        const res = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
+        const res = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
         assertPublicUrl(page.url());
-        await page.waitForNetworkIdle({ idleTime: 500, timeout: 4000 }).catch(() => { });
+        await page.waitForNetworkIdle({ idleTime: 250, timeout: 1200 }).catch(() => { });
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-        await new Promise((r) => setTimeout(r, 400));
+        await new Promise((r) => setTimeout(r, 150));
         await page.addStyleTag({ content: '.elementor-invisible{visibility:visible !important;opacity:1 !important}' });
 
         const data = await page.evaluate(() => {
