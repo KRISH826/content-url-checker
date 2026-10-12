@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 
 interface HeaderProps {
-    activeTab?: "content" | "links" | "images";
+    activeTab?: "content" | "docs" | "links" | "images";
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
@@ -40,18 +40,28 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
                         <Link
                             href="/"
                             className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === "content"
-                                ? "bg-foreground/8 text-foreground font-semibold"
-                                : "text-muted-foreground hover:text-foreground hover:bg-foreground/4 font-medium"
+                                ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/60 font-medium"
                                 }`}
                         >
                             Content Checker
                         </Link>
 
+                        <Link
+                            href="/doc-checker"
+                            className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === "docs"
+                                ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/60 font-medium"
+                                }`}
+                        >
+                            Doc to URL
+                        </Link>
+
                         <button
                             type="button"
                             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === "links"
-                                ? "bg-foreground/8 text-foreground font-semibold"
-                                : "text-muted-foreground/80 hover:text-foreground hover:bg-foreground/4 font-medium"
+                                ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                : "text-muted-foreground/80 hover:text-foreground hover:bg-muted/60 font-medium"
                                 }`}
                         >
                             Link Checker
@@ -60,8 +70,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
                         <Link
                             href="/image-extractor"
                             className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === "images"
-                                ? "bg-foreground/8 text-foreground font-semibold"
-                                : "text-muted-foreground hover:text-foreground hover:bg-foreground/4 font-medium"
+                                ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/60 font-medium"
                                 }`}
                         >
                             Image Extractor

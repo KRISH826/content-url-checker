@@ -5,33 +5,24 @@ import Header from "./Header";
 import InputCard from "./InputCard";
 import DiffResult, { DiffData } from "./DiffResult";
 import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
+
+import api from "@/lib/api";
 
 const ComparePage = () => {
     const [resultData, setResultData] = useState<DiffData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const handleCompare = async (oldUrl: string, newUrl: string) => {
         setIsLoading(true);
-        setErrorMessage(null);
-
         try {
-            const response = await fetch("/api/compare", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ oldUrl, newUrl }),
-            });
-
-            const json = await response.json();
-
-            if (!response.ok || !json.success) {
-                throw new Error(json.error || "Failed to compare URLs");
+            const res = await api.post("/compare", { oldUrl, newUrl });
+            if (res.data?.success) {
+                setResultData(res.data.data);
+                toast.success("Content comparison completed successfully!");
             }
-
-            setResultData(json.data);
-        } catch (err: unknown) {
-            console.error(err);
-            setErrorMessage(err instanceof Error ? err.message : "Comparison failed");
+        } catch {
+            // Global toast handled by api interceptor
         } finally {
             setIsLoading(false);
         }
@@ -78,19 +69,6 @@ const ComparePage = () => {
                 <section>
                     <InputCard onCompare={handleCompare} isLoading={isLoading} />
                 </section>
-
-                {/* Error Notification */}
-                {errorMessage && (
-                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs sm:text-sm flex items-center justify-between">
-                        <span>{errorMessage}</span>
-                        <button
-                            onClick={() => setErrorMessage(null)}
-                            className="text-xs underline font-medium hover:opacity-80 cursor-pointer"
-                        >
-                            Dismiss
-                        </button>
-                    </div>
-                )}
 
                 {/* Results Section */}
                 <section>

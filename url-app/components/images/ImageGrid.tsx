@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Download, Copy, Check, ExternalLink, CheckCircle2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 export interface ScannedImg {
     id: string;
@@ -21,6 +22,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({ images, onDownload }) => {
     const handleCopy = (id: string, url: string) => {
         navigator.clipboard.writeText(url);
         setCopiedId(id);
+        toast.success("Image URL copied to clipboard!");
         setTimeout(() => setCopiedId(null), 2000);
     };
 

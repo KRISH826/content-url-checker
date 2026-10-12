@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Globe, Search, Download, Image as ImageIcon } from "lucide-react";
 import ImageGrid, { ScannedImg } from "./ImageGrid";
+import { toast } from "sonner";
 
 const SAMPLE_DATA: ScannedImg[] = [
     { id: "1", url: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=600", alt: "Under-cabinet LED lighting in modern kitchen", format: "WEBP" },
@@ -25,7 +26,11 @@ export default function ImageExtractorPage() {
     const handleExtract = (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setTimeout(() => { setImages(SAMPLE_DATA); setLoading(false); }, 600);
+        setTimeout(() => {
+            setImages(SAMPLE_DATA);
+            setLoading(false);
+            toast.success(`Extracted ${SAMPLE_DATA.length} images from web page`);
+        }, 600);
     };
 
     const downloadImage = async (imgUrl: string, filename: string) => {
@@ -39,16 +44,22 @@ export default function ImageExtractorPage() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(a.href);
-        } catch { window.open(imgUrl, "_blank"); }
+            toast.success(`Downloaded ${filename}`);
+        } catch {
+            window.open(imgUrl, "_blank");
+            toast.error("Direct download blocked by CORS. Opened in new tab.");
+        }
     };
 
     const handleDownloadAll = async () => {
         setDownloadingAll(true);
+        toast.info(`Downloading ${images.length} images...`);
         for (let i = 0; i < images.length; i++) {
             await downloadImage(images[i].url, `image-${i + 1}.${images[i].format.toLowerCase()}`);
             await new Promise((r) => setTimeout(r, 200));
         }
         setDownloadingAll(false);
+        toast.success("All images downloaded successfully!");
     };
 
     const missingAltCount = images.filter((i) => !i.alt).length;
