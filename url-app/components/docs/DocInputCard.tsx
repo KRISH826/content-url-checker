@@ -28,23 +28,23 @@ export default function DocInputCard({ onCompare, isLoading }: DocInputCardProps
     };
 
     return (
-        <Card className="border-border/60 shadow-lg shadow-black/3 backdrop-blur-md bg-card/90 rounded-2xl">
+        <Card className="border-border/60 shadow-lg shadow-black/3 backdrop-blur-md bg-card/90 rounded-md">
             <CardContent className="p-5 sm:p-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         {/* Source Document */}
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between h-8">
                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                     <span className="size-2 rounded-full bg-violet-500 inline-block animate-pulse" />
                                     Source Document
                                 </label>
                                 {/* Active Mode Switcher */}
-                                <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/50 text-[11px]">
+                                <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/50 text-[11px] h-7">
                                     <button
                                         type="button"
                                         onClick={() => setMode("link")}
-                                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                                        className={`px-2.5 h-6 rounded-md transition-all cursor-pointer flex items-center justify-center ${
                                             mode === "link"
                                                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                                                 : "text-muted-foreground hover:text-foreground"
@@ -55,7 +55,7 @@ export default function DocInputCard({ onCompare, isLoading }: DocInputCardProps
                                     <button
                                         type="button"
                                         onClick={() => setMode("file")}
-                                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                                        className={`px-2.5 h-6 rounded-md transition-all cursor-pointer flex items-center justify-center ${
                                             mode === "file"
                                                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                                                 : "text-muted-foreground hover:text-foreground"
@@ -106,12 +106,12 @@ export default function DocInputCard({ onCompare, isLoading }: DocInputCardProps
 
                         {/* Target Web Page */}
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between h-8">
                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                     <span className="size-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
                                     Published Web Page
                                 </label>
-                                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Target</span>
+                                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-2.5 h-6 inline-flex items-center rounded-full border border-emerald-500/20">Target</span>
                             </div>
                             <div className="relative">
                                 <Globe className="absolute left-3.5 top-3.5 size-4 text-emerald-600 pointer-events-none" />

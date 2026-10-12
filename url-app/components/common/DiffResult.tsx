@@ -208,7 +208,7 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
 
     if (!data) {
         return (
-            <Card className="border-dashed border-border/80 bg-card/40 py-6 sm:py-7 text-center rounded-xl">
+            <Card className="border-dashed border-border/80 bg-card/40 py-6 sm:py-7 text-center rounded-md">
                 <CardContent className="flex flex-col items-center justify-center space-y-1.5 p-4">
                     <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-muted-foreground">
                         <GitCompare className="size-4 text-primary" />
@@ -269,7 +269,7 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
             )}
 
             {/* Metrics strip */}
-            <div className="grid md:grid-cols-3 rounded-xl bg-card/90 backdrop-blur-sm border border-border/60 shadow-2xs divide-y md:divide-y-0 md:divide-x divide-border/60">
+            <div className="grid md:grid-cols-3 rounded-md bg-card/90 backdrop-blur-sm border border-border/60 shadow-2xs divide-y md:divide-y-0 md:divide-x divide-border/60">
                 <div className="p-3 sm:p-3.5 space-y-1.5">
                     <div className="flex items-center justify-between">
                         <span className="text-[11px] font-medium text-muted-foreground">Content match</span>
@@ -292,7 +292,7 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
             </div>
 
             {/* SEO Title Card */}
-            <Card className="border-border/60 bg-card/90 backdrop-blur-sm shadow-2xs rounded-xl">
+            <Card className="border-border/60 bg-card/90 backdrop-blur-sm shadow-2xs rounded-md">
                 <CardContent className="p-3 sm:p-3.5">
                     <div className="flex items-center justify-between pb-2 border-b border-border/40">
                         <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Page Title (SEO)</span>
@@ -320,7 +320,7 @@ const DiffResult: React.FC<{ data?: DiffData | null }> = ({ data }) => {
             </Card>
 
             {/* Content Diff Viewer */}
-            <Card className="border-border/60 bg-card/95 backdrop-blur-sm shadow-xs rounded-xl">
+            <Card className="border-border/60 bg-card/95 backdrop-blur-sm shadow-xs rounded-md">
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-border/40 p-3 sm:p-3.5">
                     <div>
                         <CardTitle className="text-sm font-semibold">Content Comparison</CardTitle>

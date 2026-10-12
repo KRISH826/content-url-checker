@@ -43,18 +43,18 @@ const InputCard: React.FC<InputCardProps> = ({
     };
 
     return (
-        <Card className="border-border/60 shadow-lg shadow-black/3 backdrop-blur-md bg-card/90 rounded-2xl">
+        <Card className="border-border/60 shadow-lg shadow-black/3 backdrop-blur-md bg-card/90 rounded-md">
             <CardContent className="p-6 sm:p-7">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-6 relative">
                         {/* Old / Production URL */}
                         <div className="w-full flex-1 space-y-2">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between h-8">
                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                     <span className="size-2 rounded-full bg-rose-500 inline-block animate-pulse" />
                                     Original / Old URL
                                 </label>
-                                <span className="text-[11px] font-medium text-muted-foreground/80 px-2 py-0.5 rounded-full bg-muted">
+                                <span className="text-[11px] font-medium text-muted-foreground/80 px-2.5 h-6 inline-flex items-center rounded-full bg-muted">
                                     Baseline
                                 </span>
                             </div>
@@ -87,12 +87,12 @@ const InputCard: React.FC<InputCardProps> = ({
 
                         {/* New / Staging URL */}
                         <div className="w-full flex-1 space-y-2">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between h-8">
                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                                     <span className="size-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
                                     New / Staging URL
                                 </label>
-                                <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                                <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 px-2.5 h-6 inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/20">
                                     Target
                                 </span>
                             </div>

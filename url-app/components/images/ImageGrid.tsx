@@ -31,7 +31,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({ images, onDownload }) => {
             {images.map((img) => (
                 <div
                     key={img.id}
-                    className="group rounded-xl bg-card border border-border/70 hover:border-primary/40 shadow-2xs transition-all overflow-hidden flex flex-col"
+                    className="group rounded-md bg-card border border-border/70 hover:border-primary/40 shadow-2xs transition-all overflow-hidden flex flex-col"
                 >
                     <div className="relative aspect-video bg-muted/40 overflow-hidden">
                         {/* eslint-disable-next-line @next/next/no-img-element */}

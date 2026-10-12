@@ -2,14 +2,16 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-interface HeaderProps {
-    activeTab?: "content" | "docs" | "links" | "images";
-}
+export const Header: React.FC = () => {
+    const pathname = usePathname();
+    const isContent = pathname === "/";
+    const isDocs = pathname.startsWith("/doc-checker");
+    const isImages = pathname.startsWith("/image-extractor");
 
-export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
     return (
-        <header className="sticky border-b border-gray-50 shadow-xs top-0 z-50 w-full bg-background/60 backdrop-blur-md">
+        <header className="sticky border-b border-border/50 shadow-xs top-0 z-50 w-full bg-background/60 backdrop-blur-md">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-15 flex items-center justify-between gap-6">
                 {/* Brand / Logo */}
                 <div className="flex items-center gap-8 lg:gap-10">
@@ -35,11 +37,11 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
                         <span className="font-bold tracking-tight">Content Auditor</span>
                     </Link>
 
-                    {/* Navigation Menu (clean, borderless, seamless tabs) */}
+                    {/* Navigation Menu (declarative routing with usePathname) */}
                     <nav className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                         <Link
                             href="/"
-                            className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === "content"
+                            className={`px-3 py-1.5 rounded-lg transition-all ${isContent
                                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/60 font-medium"
                                 }`}
@@ -49,7 +51,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
 
                         <Link
                             href="/doc-checker"
-                            className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === "docs"
+                            className={`px-3 py-1.5 rounded-lg transition-all ${isDocs
                                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/60 font-medium"
                                 }`}
@@ -57,19 +59,9 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
                             Doc to URL
                         </Link>
 
-                        <button
-                            type="button"
-                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === "links"
-                                ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                                : "text-muted-foreground/80 hover:text-foreground hover:bg-muted/60 font-medium"
-                                }`}
-                        >
-                            Link Checker
-                        </button>
-
                         <Link
                             href="/image-extractor"
-                            className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === "images"
+                            className={`px-3 py-1.5 rounded-lg transition-all ${isImages
                                 ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/60 font-medium"
                                 }`}
@@ -79,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
                     </nav>
                 </div>
 
-                {/* Right side status */}
+                {/* Right side status badge */}
                 <div className="flex items-center gap-3">
                     <span className="text-xs font-mono text-muted-foreground hidden sm:inline">
                         v1.0
