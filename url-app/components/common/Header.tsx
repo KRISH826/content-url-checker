@@ -57,15 +57,15 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = "content" }) => {
                             Link Checker
                         </button>
 
-                        <button
-                            type="button"
-                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === "images"
+                        <Link
+                            href="/image-extractor"
+                            className={`px-3 py-1.5 rounded-lg transition-all ${activeTab === "images"
                                 ? "bg-foreground/8 text-foreground font-semibold"
-                                : "text-muted-foreground/80 hover:text-foreground hover:bg-foreground/4 font-medium"
+                                : "text-muted-foreground hover:text-foreground hover:bg-foreground/4 font-medium"
                                 }`}
                         >
                             Image Extractor
-                        </button>
+                        </Link>
                     </nav>
                 </div>
 

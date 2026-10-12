@@ -14,9 +14,18 @@ import {
 interface InputCardProps {
     onCompare?: (oldUrl: string, newUrl: string) => void;
     isLoading?: boolean;
+    featureDescription?: string;
+    loadingText?: string;
+    buttonText?: string;
 }
 
-const InputCard: React.FC<InputCardProps> = ({ onCompare, isLoading = false }) => {
+const InputCard: React.FC<InputCardProps> = ({
+    onCompare,
+    isLoading = false,
+    featureDescription = "Full text extraction, Cheerio cleanup & word diff analysis",
+    loadingText = "Analyzing Content...",
+    buttonText = "Run Comparison",
+}) => {
     const [oldUrl, setOldUrl] = useState("");
     const [newUrl, setNewUrl] = useState("");
 
@@ -105,7 +114,7 @@ const InputCard: React.FC<InputCardProps> = ({ onCompare, isLoading = false }) =
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/40">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <ShieldCheck className="size-4 text-emerald-500" />
-                            <span>Full text extraction, Cheerio cleanup & word diff analysis</span>
+                            <span>{featureDescription}</span>
                         </div>
 
                         <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -117,12 +126,12 @@ const InputCard: React.FC<InputCardProps> = ({ onCompare, isLoading = false }) =
                                 {isLoading ? (
                                     <>
                                         <span className="size-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                                        Analyzing Content...
+                                        {loadingText}
                                     </>
                                 ) : (
                                     <>
                                         <Search className="size-4" />
-                                        Run Comparison
+                                        {buttonText}
                                     </>
                                 )}
                             </Button>
