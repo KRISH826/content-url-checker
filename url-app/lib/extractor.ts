@@ -47,10 +47,15 @@ function toLines(text: string, headings: [string, string][]): ContentLine[] {
     const tags = new Map(headings.map(([tag, h]) => [normalizeText(h), tag]));
     const out: ContentLine[] = [];
     for (const raw of text.split('\n')) {
-        const t = normalizeText(raw);
+        let t = normalizeText(raw);
         if (!t || !/[\p{L}\p{N}]/u.test(t) || /^skip to (main )?content$/i.test(t)) continue;
         if (out[out.length - 1]?.text === t) continue;
-        out.push({ tag: tags.get(t) ?? 'text', text: t });
+        const isHeading = tags.get(t);
+        const isPointer = /^([•\-\*\u2022\u25cf\u25b6\u27a4]|\d+[\.)])\s*/.test(t);
+        if (isPointer && !t.startsWith('• ')) {
+            t = '• ' + t.replace(/^([•\-\*\u2022\u25cf\u25b6\u27a4]|\d+[\.)])\s*/, '');
+        }
+        out.push({ tag: isHeading ?? (isPointer ? 'li' : 'text'), text: t });
     }
     return out;
 }
@@ -164,6 +169,10 @@ async function readStatic(url: string) {
     $('script,style,noscript,template,svg,iframe,input,select,textarea,header,footer,nav,[role=banner],[role=contentinfo],[role=navigation]')
         .filter((_, el) => !$(el).parent().closest('main,article').length && !$(el).find('h1').length)
         .remove();
+    $('table tr').each((_, tr) => {
+        const cells = $(tr).find('th, td').map((_, cell) => $(cell).text().trim()).get().filter(Boolean);
+        if (cells.length) $(tr).text(cells.join(' | ') + '\n');
+    });
     $('br').replaceWith('\n');
     $('p,div,li,h1,h2,h3,h4,h5,h6,section,article,tr').append('\n');
     return { lines: toLines($('body').text(), headings), title };
