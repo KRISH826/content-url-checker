@@ -10,6 +10,17 @@ export interface DocExtractedData {
 }
 
 /**
+ * Normalizes list items, bullet points, numbers, and pointers into uniform '• [text]'
+ */
+function parsePointer(text: string): { isPointer: boolean; clean: string } {
+    const match = text.match(/^([•\-\*\+\u2022\u25cf\u25b6\u27a4]|\d+[\.)]|>\s*)\s*(.+)/);
+    if (match && match[2]?.trim()) {
+        return { isPointer: true, clean: `• ${normalizeText(match[2])}` };
+    }
+    return { isPointer: false, clean: normalizeText(text) };
+}
+
+/**
  * Ultra-fast Google Doc ID extractor (supports edit, view, share, or preview URLs)
  */
 export function extractGoogleDocId(url: string): string | null {
@@ -19,6 +30,7 @@ export function extractGoogleDocId(url: string): string | null {
 
 /**
  * Extract Google Doc via Google's direct CDN HTML export (~250ms)
+ * Preserves tables row-by-row and bullet pointers accurately
  */
 export async function extractGoogleDoc(docUrl: string): Promise<DocExtractedData> {
     const docId = extractGoogleDocId(docUrl);
@@ -27,7 +39,6 @@ export async function extractGoogleDoc(docUrl: string): Promise<DocExtractedData
     }
 
     const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=html`;
-
     const res = await fetch(exportUrl, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
@@ -44,20 +55,35 @@ export async function extractGoogleDoc(docUrl: string): Promise<DocExtractedData
 
     const html = await res.text();
     const $ = cheerio.load(html);
-
     const title = normalizeText($('title').first().text() || $('h1').first().text() || 'Google Doc');
     const lines: ContentLine[] = [];
 
+    // 1. Structured Table Extraction (row-by-row)
+    $('table').each((_, tbl) => {
+        $(tbl).find('tr').each((_, tr) => {
+            const cells = $(tr).find('td, th').map((_, cell) => normalizeText($(cell).text())).get().filter(Boolean);
+            if (cells.length) {
+                lines.push({ tag: 'text', text: cells.join(' | ') });
+            }
+        });
+        $(tbl).remove(); // Remove table so inner paragraph elements aren't duplicated
+    });
+
+    // 2. Headings, Paragraphs, and Bullet Pointers
     $('h1, h2, h3, h4, h5, h6, p, li').each((_, el) => {
-        const text = normalizeText($(el).text());
-        if (!text || text.length < 2) return;
-        if (/^published by google docs/i.test(text)) return;
+        const raw = $(el).text();
+        if (!raw || /^published by google docs/i.test(raw)) return;
 
         const tag = el.tagName.toLowerCase();
-        lines.push({
-            tag: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag) ? tag : 'text',
-            text,
-        });
+        const isHeading = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag);
+        const { isPointer, clean } = parsePointer(raw);
+
+        if (clean && clean.length > 1) {
+            lines.push({
+                tag: isHeading ? tag : (tag === 'li' || isPointer ? 'li' : 'text'),
+                text: tag === 'li' && !clean.startsWith('• ') ? `• ${clean}` : clean,
+            });
+        }
     });
 
     if (lines.length === 0) {
@@ -70,14 +96,13 @@ export async function extractGoogleDoc(docUrl: string): Promise<DocExtractedData
 
 /**
  * Ultra-fast zero-dependency .docx extractor (<10ms)
- * Unzips word/document.xml directly in memory using Node zlib
+ * Memory-unzips word/document.xml and preserves tables & bullet lists
  */
 export function extractDocx(buffer: Buffer, filename = 'document.docx'): DocExtractedData {
     let offset = 0;
     let xmlContent = '';
 
     while (offset < buffer.length - 4) {
-        // Zip local file header signature 0x04034b50
         if (buffer.readUInt32LE(offset) === 0x04034b50) {
             const compMethod = buffer.readUInt16LE(offset + 8);
             const compSize = buffer.readUInt32LE(offset + 18);
@@ -106,20 +131,46 @@ export function extractDocx(buffer: Buffer, filename = 'document.docx'): DocExtr
     const $ = cheerio.load(xmlContent, { xmlMode: true });
     const lines: ContentLine[] = [];
 
+    // 1. Structured Tables (join cell columns with ' | ')
+    $('w\\:tbl').each((_, tbl) => {
+        $(tbl).find('w\\:tr').each((_, tr) => {
+            const cells: string[] = [];
+            $(tr).find('w\\:tc').each((_, tc) => {
+                let cellText = '';
+                $(tc).find('w\\:t').each((_, t) => { cellText += $(t).text(); });
+                const clean = normalizeText(cellText);
+                if (clean) cells.push(clean);
+            });
+            if (cells.length) {
+                lines.push({ tag: 'text', text: cells.join(' | ') });
+            }
+        });
+        $(tbl).remove(); // Prevent duplicate extraction of paragraphs inside table cells
+    });
+
+    // 2. Headings, Paragraphs, and Word Native Lists (w:numPr)
     $('w\\:p').each((_, p) => {
-        let tag = 'text';
+        let pText = '';
+        $(p).find('w\\:t').each((_, t) => { pText += $(t).text(); });
+        if (!pText.trim()) return;
+
         const pStyle = $(p).find('w\\:pStyle').attr('w:val') || '';
+        const hasNumPr = $(p).find('w\\:numPr').length > 0;
+        const { isPointer, clean } = parsePointer(pText);
+
+        let tag = 'text';
+        let formatted = clean;
+
         if (/heading1/i.test(pStyle)) tag = 'h1';
         else if (/heading2/i.test(pStyle)) tag = 'h2';
         else if (/heading3/i.test(pStyle)) tag = 'h3';
+        else if (hasNumPr || isPointer) {
+            tag = 'li';
+            formatted = clean.startsWith('• ') ? clean : `• ${clean}`;
+        }
 
-        let pText = '';
-        $(p).find('w\\:t').each((_, t) => {
-            pText += $(t).text();
-        });
-        const clean = normalizeText(pText);
-        if (clean && clean.length > 1) {
-            lines.push({ tag, text: clean });
+        if (formatted && formatted.length > 1) {
+            lines.push({ tag, text: formatted });
         }
     });
 
@@ -134,8 +185,62 @@ export function extractDocx(buffer: Buffer, filename = 'document.docx'): DocExtr
 }
 
 /**
+ * Ultra-fast plain text / markdown / copied doc text extractor (<1ms)
+ * Preserves Markdown tables, bullet pointers, and headings
+ */
+export function extractTextFile(rawText: string, filename = 'document.txt'): DocExtractedData {
+    const lines: ContentLine[] = [];
+
+    for (const raw of rawText.split(/\r?\n/)) {
+        let text = raw.trim();
+        if (!text) continue;
+
+        // Skip markdown table divider borders: |---|---|
+        if (/^\|?(\s*:?-+:?\s*\|)+\s*:?-+:?\s*\|?$/.test(text)) continue;
+
+        // Markdown table row: | cell 1 | cell 2 |
+        if (text.startsWith('|') && text.endsWith('|')) {
+            const cells = text.slice(1, -1).split('|').map((c) => normalizeText(c)).filter(Boolean);
+            if (cells.length) {
+                lines.push({ tag: 'text', text: cells.join(' | ') });
+                continue;
+            }
+        }
+
+        let tag = 'text';
+        if (text.startsWith('# ')) {
+            tag = 'h1';
+            text = text.replace(/^#\s+/, '');
+        } else if (text.startsWith('## ')) {
+            tag = 'h2';
+            text = text.replace(/^##\s+/, '');
+        } else if (text.startsWith('### ')) {
+            tag = 'h3';
+            text = text.replace(/^###\s+/, '');
+        }
+
+        const { isPointer, clean } = parsePointer(text);
+        const finalTag = tag !== 'text' ? tag : (isPointer ? 'li' : 'text');
+        const finalText = isPointer ? clean : normalizeText(text);
+
+        if (finalText && finalText.length > 0) {
+            lines.push({ tag: finalTag, text: finalText });
+        }
+    }
+
+    if (lines.length === 0) {
+        throw new Error('Text content is empty.');
+    }
+
+    const title = lines.find((l) => l.tag === 'h1')?.text || filename.replace(/\.(txt|md)$/i, '');
+    const wordCount = lines.reduce((acc, l) => acc + l.text.split(/\s+/).length, 0);
+
+    return { title, lines, wordCount, sourceType: 'text' };
+}
+
+/**
  * Ultra-fast zero-dependency PDF text extractor (<30ms)
- * Inflates PDF FlateDecode content streams and captures text blocks
+ * Inflates PDF FlateDecode content streams and standardizes bullet points
  */
 export function extractPdf(buffer: Buffer, filename = 'document.pdf'): DocExtractedData {
     const raw = buffer.toString('binary');
@@ -156,7 +261,6 @@ export function extractPdf(buffer: Buffer, filename = 'document.pdf'): DocExtrac
             decompressed = streamData.toString('latin1');
         }
 
-        // Match standard PDF Tj and TJ text operators
         const tjRegex = /\(([^)]+)\)\s*Tj/g;
         let tjMatch;
         while ((tjMatch = tjRegex.exec(decompressed)) !== null) {
@@ -177,9 +281,10 @@ export function extractPdf(buffer: Buffer, filename = 'document.pdf'): DocExtrac
 
     const lines: ContentLine[] = [];
     for (const part of extractedParts) {
-        const clean = normalizeText(part.replace(/\\([()\\])/g, '$1'));
+        const unescaped = part.replace(/\\([()\\])/g, '$1');
+        const { isPointer, clean } = parsePointer(unescaped);
         if (clean && clean.length > 1) {
-            lines.push({ tag: 'text', text: clean });
+            lines.push({ tag: isPointer ? 'li' : 'text', text: clean });
         }
     }
 
@@ -191,43 +296,4 @@ export function extractPdf(buffer: Buffer, filename = 'document.pdf'): DocExtrac
     const wordCount = lines.reduce((acc, l) => acc + l.text.split(/\s+/).length, 0);
 
     return { title, lines, wordCount, sourceType: 'pdf' };
-}
-
-/**
- * Ultra-fast plain text / markdown extractor (<1ms)
- */
-export function extractTextFile(rawText: string, filename = 'document.txt'): DocExtractedData {
-    const rawLines = rawText.split(/\r?\n/);
-    const lines: ContentLine[] = [];
-
-    for (const raw of rawLines) {
-        let text = raw.trim();
-        if (!text) continue;
-
-        let tag = 'text';
-        if (text.startsWith('# ')) {
-            tag = 'h1';
-            text = text.replace(/^#\s+/, '');
-        } else if (text.startsWith('## ')) {
-            tag = 'h2';
-            text = text.replace(/^##\s+/, '');
-        } else if (text.startsWith('### ')) {
-            tag = 'h3';
-            text = text.replace(/^###\s+/, '');
-        }
-
-        const clean = normalizeText(text);
-        if (clean) {
-            lines.push({ tag, text: clean });
-        }
-    }
-
-    if (lines.length === 0) {
-        throw new Error('Uploaded text file is empty.');
-    }
-
-    const title = lines.find((l) => l.tag === 'h1')?.text || filename.replace(/\.(txt|md)$/i, '');
-    const wordCount = lines.reduce((acc, l) => acc + l.text.split(/\s+/).length, 0);
-
-    return { title, lines, wordCount, sourceType: 'text' };
 }
